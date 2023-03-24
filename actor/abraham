@@ -1,0 +1,23 @@
+{
+	"@context": [
+		"https://www.w3.org/ns/activitystreams",
+		"https://w3id.org/security/v1"
+	],
+
+	"id": "https://abrajam.com/actor/abraham",
+	"type": "Person",
+	"name" : "Abraham of abrajam",
+	"summary" : "Ths is yyy", 
+	"preferredUsername": "a",
+	"inbox": "https://abrajam.com/inbox",
+	"icon": [{
+		"url": "https://abrajam.com/assets/profile.png",
+		"mediaType": "image/png", 
+		"type": "Image"
+		}], 
+	"publicKey": {
+		"id": "https://abrajam.com/actor#main-key",
+		"owner": "https://abrajam.com/actor",
+		"publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAug6FJWSNBCXcjh9AD914\nV0e8oxs7uvyl52IOFiDxO8okTzgqNj0kILBiPS7oW6mFtXQjiF1MBdiNyHQ6Qt6p\nxVbXLL7e6XB327FpdjIIK4HqqO4OooFx50yAq2VcLmdDLOUJfRbQnYtd1VcDsusc\nYSXk2g3T6H4hngTFcR8VNsS4ocABC1QNLQ+AMepNVRqhrspkeQF8JeZfYKTzX3Pj\npNx022ZVwcS/kNvFBcT/IE7Z+ZhvBeMEEe27GO160DGuJgCzy9Qlw0jv3Kdzyzke\nSgi5uHapSCJs4RKPFUdkIJeLBD3p2zj6/AeJugeC/GxZ+4jCy2UajMR3ZqcecD4m\nqQIDAQAB\n-----END PUBLIC KEY-----"
+	}
+}
