@@ -6,7 +6,7 @@ const path = require('path');
 const https = require('https')
 const crypto = require('crypto')
 const url = require('url')
-
+const INBOX = []
 require('dotenv').config()
 app.use(express.json())
 app.use(helmet());
@@ -57,9 +57,23 @@ app.get('/assets/:asset([^/]*)*', async (req, res) => {
   } catch (error) {
     res.status(500).send(`Sad at: ${error}`)
   }
+
 })
 
-app.get('/post', async (req, res) => {
+app.get('/inspect', async (req, res) => {
+  let inbox = {}
+  inbox.inbox = INBOX
+  res.status(200).json(inbox)
+})
+
+app.post('/inbox', async(req, res) => {
+  let item = req.body
+  console.log(req, item)
+  INBOX.push(item)
+  res.status(200).json({status: "OK"})
+})
+
+app.post('/post', async (req, res) => {
 
   data = {
     "@context": "https://www.w3.org/ns/activitystreams",
