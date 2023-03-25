@@ -9,7 +9,7 @@ const url = require('url')
 const INBOX = []
 require('dotenv').config()
 app.use(express.json())
-app.use(helmet());
+//app.use(helmet());
 
 
 
@@ -60,25 +60,28 @@ app.get('/assets/:asset([^/]*)*', async (req, res) => {
 
 })
 
-app.get('/inspect', VerifySignature, async (req, res) => {
+app.get('/inspect', async (req, res) => {
   let inbox = {}
   inbox.inbox = INBOX
   res.status(200).json(inbox)
 })
 
-app.post('/inbox', async(req, res) => {
+app.post('/inbox', VerifySignature, async (req, res) => {
+  console.log(req)
   let item = req.body
   INBOX.push(item)
   res.status(200).json({status: "OK"})
 })
 
 app.post('/post', async (req, res) => {
-
+  
+  let data = req.body;   
   try {
     post(data, "https://mastodon.social/inbox")
-    res.status(200).send(`OK`)
+     res.status(200).send(`OK`)
 
   } catch (error) {
+    console.log(error)
     res.status(500).send(`Sad at: ${error}`)
   }
 })
@@ -86,7 +89,7 @@ app.post('/post', async (req, res) => {
 
 function post(data, endpoint) {
 
-  digestHash = crypto.createHash('sha256').update(JSON.stringify(dataobject)).digest('base64');
+  digestHash = crypto.createHash('sha256').update(JSON.stringify(data)).digest('base64');
 
   const urlinfo = new URL(endpoint)
   const date = (new Date()).toUTCString()
@@ -112,53 +115,32 @@ function post(data, endpoint) {
     },
   }
 
-  options = {
-    hostname: 'mastodon.social',
-    port: 443,
-    path: '/inbox',
-    method: 'POST',
-    headers: {
-      Host: 'mastodon.social',
-      Date: 'Sat, 25 Mar 2023 03:52:55 GMT',
-      Digest: 'SHA-256=24gIolZhDcU6hrltYm/BFmZv4/0oMW8Nmf35a2tvWeM=',
-      Signature: 'keyId="https://abrajam.com/actor/abraham",headers="(request-target) host date digest",signature="tB1sf0DASaG0qIOItvFBhQURlRmFL0trN22TwxaZyQ97mmuLBsTlWIoErzzvckeQlut758ZzWt05FZUyEfLgBKXXhrZl/LpGxQT6pR0uPdLr8rBlmsE8Fn4UyafSaLqoFvZalvIUfobLSOy9nQkBqjaO3HLlg+B6p40iwnfsDBaO2bcQwbzABjpFyh6DgA+uEQwBjvIFGuGwIdrd3GFGCSGH3TpFg3k8mxRh8rwD+LhgzHsgfJf6dDX9Xnz4TNecFTqEEbY/8LEtjMv6J8pGPrL2i9y2wXwpDHlqRvuQL6yh7DFMyT6yMDnfG1FURNFrghBXkpWEIaVDWj9aubfB6Q=="'
-    }
-  }
-
   let req = https.request(options, (res) => {
-     console.error("statusCode", res.statusCode)
+     console.log("POST statusCode", res)
 
     res.on('data', (d) => {
-      console.log("data", d.toString())
+       console.log("data", d.toString())
     })
   })
 
   req.on('error', (error) => {
     console.error("error", error.toString())
   })
-
-  req.write(JSON.stringify(dataobject))
+  
+  req.write(JSON.stringify(data))
   req.end()
 
 }
 
 function VerifySignature(req,  res, next){
+  //curl --REQUEST GET --header 'Accept: application/activity+json' https://mastodon.social/users/user#main-key
+    
+    let data = req.body; 
+    let header = req.headers
+    
 
-    header = {
-      hostname: 'mastodon.social',
-      port: 443,
-      path: '/inbox',
-      method: 'POST',
-      headers: {
-        Host: 'mastodon.social',
-        Date: 'Sat, 25 Mar 2023 03:52:55 GMT',
-        Digest: 'SHA-256=24gIolZhDcU6hrltYm/BFmZv4/0oMW8Nmf35a2tvWeM=',
-        Signature: 'keyId="https://abrajam.com/actor/abraham",headers="(request-target) host date digest",signature="tB1sf0DASaG0qIOItvFBhQURlRmFL0trN22TwxaZyQ97mmuLBsTlWIoErzzvckeQlut758ZzWt05FZUyEfLgBKXXhrZl/LpGxQT6pR0uPdLr8rBlmsE8Fn4UyafSaLqoFvZalvIUfobLSOy9nQkBqjaO3HLlg+B6p40iwnfsDBaO2bcQwbzABjpFyh6DgA+uEQwBjvIFGuGwIdrd3GFGCSGH3TpFg3k8mxRh8rwD+LhgzHsgfJf6dDX9Xnz4TNecFTqEEbY/8LEtjMv6J8pGPrL2i9y2wXwpDHlqRvuQL6yh7DFMyT6yMDnfG1FURNFrghBXkpWEIaVDWj9aubfB6Q=="'
-      }
-    }
-
-
-    headerArray = header.headers.Signature.split(',')
+    //these are not always captilised
+    headerArray = header.Signature.split(',')
     headerObject = {}
     for(headerItem of headerArray){
       headerObject[headerItem.split("=")[0]] = headerItem.split("=")[1].replace(/^"(.*)"$/, '$1')
@@ -169,24 +151,23 @@ function VerifySignature(req,  res, next){
     signature = headerObject['signature']
 
     https.get(actorFile, (resp) => {
-    let data = "";
+    let dataG = "";
 
-    // A chunk of data has been recieved.
     resp.on("data", chunk => {
-      data += chunk;
+      dataG += chunk;
     });
 
     resp
     .on("end", () => {
 
-      publicKey =   JSON.parse(data).publicKey.publicKeyPem 
+      publicKey =   JSON.parse(dataG).publicKey.publicKeyPem 
       comarision_array = []
       for(header_compare of headerKeys.split(' ')){
 
         if(header_compare == '(request-target)'){
           comarision_array.push('(request-target): post /inbox')
         } else {
-          comarision_array.push(`${header_compare}: ${ header.headers[header_compare.replace(/(^\w|\s\w)/g, m => m.toUpperCase())]}`)
+          comarision_array.push(`${header_compare}: ${ header[header_compare.replace(/(^\w|\s\w)/g, m => m.toUpperCase())]}`)
         }
 
       }
@@ -194,10 +175,12 @@ function VerifySignature(req,  res, next){
       verifier = crypto.createVerify("sha256");
       verifier.update(comarision_array.join('\n'))
       result = verifier.verify(publicKey, signature, 'base64');
-      dataHash = crypto.createHash('sha256').update(JSON.stringify(dataobject)).digest('base64');
-      digestMatch = `SHA-256=${dataHash}` == header.headers['Digest']
+      dataHash = crypto.createHash('sha256').update(JSON.stringify(data)).digest('base64');
+      digestMatch = `SHA-256=${dataHash}` == header['Digest']
       if(result && digestMatch){
         next()
+      } else {
+        res.status(401).send("signature does not match. ")
       }
        
     });
@@ -218,26 +201,6 @@ if(!!privateKey == false){
   console.error("private key must be specified in env")
   return
 }
-
-//(new Date()).getTime()
-dataobject = {
-  "@context": "https://www.w3.org/ns/activitystreams",
-
-  "id": `https://abrajam.com/post-${'1'}`,
-  "type": "Create",
-  "actor": "https://abrajam.com/actor/abraham",
-
-  "object": {
-    "id": `${'1'}`,
-    "type": "Note",
-    "published": `${'1'}`,
-    "attributedTo": "https://abrajam.com/actor/abraham",
-    "inReplyTo": "https://mastodon.social/@heycitizen/110076914025449350",
-    "content": `<p>Hello world</p> - -${'1'}`,
-    "to": "https://www.w3.org/ns/activitystreams#Public"
-  }
-}
-
 
 
 app.listen(port, () => console.log(`Mailer listening on port ${port}..."`))

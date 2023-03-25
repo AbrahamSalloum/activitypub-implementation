@@ -1,0 +1,97 @@
+<html>
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+
+</head>
+
+<body>
+    <table>
+        <tr>
+            <td>
+                <select>
+                    <option value="select">select</option>
+                    <option value="reply">reply</option>
+                </select>
+                <button>send</button>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <textarea style="width:1000px;height:1000px"></textarea>
+            </td>
+        </tr>
+        <tr>
+            <td id="msg">
+
+            </td>
+        </tr>
+    </table>
+
+</body>
+
+
+
+<script>
+
+    $(document).ready(function () {
+
+
+
+        $('select').on('change', function () {
+            id = (new Date()).getTime()
+            var jsontemplate = {
+
+                "reply": {
+                    "@context": "https://www.w3.org/ns/activitystreams",
+
+                    "id": `https://abrajam.com/post-${id}`,
+                    "type": "Create",
+                    "actor": "https://abrajam.com/actor/abraham",
+
+                    "object": {
+                        "id": `https://abrajam.com/post-${id}`,
+                        "type": "Note",
+                        "published": `${id}`,
+                        "attributedTo": "https://abrajam.com/actor/abraham",
+                        "inReplyTo": "https://mastodon.social/@heycitizen/110076914025449350",
+                        "content": `<p>Hello world</p> -${id}`,
+                        "to": "https://www.w3.org/ns/activitystreams#Public"
+                    }
+                }
+
+            }
+
+
+
+            if (this.value == "reply") {
+                console.log(jsontemplate)
+                $('textarea').text(JSON.stringify(jsontemplate["reply"], undefined, 4))
+
+
+            }
+
+
+
+
+        })
+
+        $('button').on('click', function(){
+            operation = $('textarea').value
+            data = $('textarea').text()
+            console.log(data)
+
+            $.ajax({
+                type: "POST",
+                url: "https://abrajam.com/post",
+                data: $('textarea').text(),
+                success: (d) => $('#msg').html(d),
+                contentType: "application/json; charset=utf-8",
+               
+            });
+
+        })
+    });
+</script>
+
+</html>
