@@ -8,7 +8,9 @@ const crypto = require('crypto')
 const url = require('url')
 const INBOX = []
 require('dotenv').config()
-app.use(express.json())
+var bodyParser = require('body-parser')
+
+app.use(express.json({strict: false, type: '*/*'}))
 //app.use(helmet());
 
 
@@ -66,17 +68,22 @@ app.get('/inspect', async (req, res) => {
   res.status(200).json(inbox)
 })
 
-app.post('/inbox', VerifySignature, async (req, res) => {
-  console.log(req)
+app.post('/inbox', VerifySignature,  async (req, res) => { 
+ 
   let item = req.body
+  
   INBOX.push(item)
+  console.log(INBOX)
   res.status(200).json({status: "OK"})
 })
 
 app.post('/post', async (req, res) => {
   
   let data = req.body;   
+   console.log("d", data)
+   
   try {
+     
     post(data, "https://mastodon.social/inbox")
      res.status(200).send(`OK`)
 
@@ -119,7 +126,7 @@ function post(data, endpoint) {
      console.log("POST statusCode", res)
 
     res.on('data', (d) => {
-       console.log("data", d.toString())
+      //  console.log("data", d.toString())
     })
   })
 
@@ -134,13 +141,12 @@ function post(data, endpoint) {
 
 function VerifySignature(req,  res, next){
   //curl --REQUEST GET --header 'Accept: application/activity+json' https://mastodon.social/users/user#main-key
-    
+  
     let data = req.body; 
     let header = req.headers
-    
 
-    //these are not always captilised
-    headerArray = header.Signature.split(',')
+
+    headerArray = header.signature.split(',')
     headerObject = {}
     for(headerItem of headerArray){
       headerObject[headerItem.split("=")[0]] = headerItem.split("=")[1].replace(/^"(.*)"$/, '$1')
@@ -149,8 +155,14 @@ function VerifySignature(req,  res, next){
     actorFile = headerObject['keyId']
     headerKeys = headerObject['headers']
     signature = headerObject['signature']
+    
+    let options = {
+      headers: {
+        'Accept': 'application/activity+json'
+      },
+    }
 
-    https.get(actorFile, (resp) => {
+    https.get(actorFile, options, (resp) => {
     let dataG = "";
 
     resp.on("data", chunk => {
@@ -160,23 +172,26 @@ function VerifySignature(req,  res, next){
     resp
     .on("end", () => {
 
-      publicKey =   JSON.parse(dataG).publicKey.publicKeyPem 
+      publicKey =   JSON.parse(dataG)?.publicKey?.publicKeyPem 
+      if (!publicKey) return 
       comarision_array = []
       for(header_compare of headerKeys.split(' ')){
 
         if(header_compare == '(request-target)'){
           comarision_array.push('(request-target): post /inbox')
         } else {
-          comarision_array.push(`${header_compare}: ${ header[header_compare.replace(/(^\w|\s\w)/g, m => m.toUpperCase())]}`)
+          comarision_array.push(`${header_compare}: ${ header[header_compare]}`)
         }
 
       }
-
+      
       verifier = crypto.createVerify("sha256");
-      verifier.update(comarision_array.join('\n'))
+      comparethis = comarision_array.join('\n')
+      verifier.update(comparethis)
       result = verifier.verify(publicKey, signature, 'base64');
+      
       dataHash = crypto.createHash('sha256').update(JSON.stringify(data)).digest('base64');
-      digestMatch = `SHA-256=${dataHash}` == header['Digest']
+      digestMatch = `SHA-256=${dataHash}` == header['digest']
       if(result && digestMatch){
         next()
       } else {
@@ -188,8 +203,6 @@ function VerifySignature(req,  res, next){
   .on("error", err => {
     console.log("Error: " + err.message);
   });
-
-    
    
 }
 
