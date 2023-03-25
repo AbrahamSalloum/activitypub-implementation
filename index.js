@@ -60,7 +60,7 @@ app.get('/assets/:asset([^/]*)*', async (req, res) => {
 
 })
 
-app.get('/inspect', async (req, res) => {
+app.get('/inspect', VerifySignature, async (req, res) => {
   let inbox = {}
   inbox.inbox = INBOX
   res.status(200).json(inbox)
@@ -68,30 +68,11 @@ app.get('/inspect', async (req, res) => {
 
 app.post('/inbox', async(req, res) => {
   let item = req.body
-  console.log(req, item)
   INBOX.push(item)
   res.status(200).json({status: "OK"})
 })
 
 app.post('/post', async (req, res) => {
-
-  data = {
-    "@context": "https://www.w3.org/ns/activitystreams",
-
-    "id": `https://abrajam.com/post-${(new Date()).getTime()}`,
-    "type": "Create",
-    "actor": "https://abrajam.com/actor/abraham",
-
-    "object": {
-      "id": `https://abrajam.com/post-${(new Date()).getTime()}`,
-      "type": "Note",
-      "published": `${(new Date()).toUTCString()}`,
-      "attributedTo": "https://abrajam.com/actor/abraham",
-      "inReplyTo": "https://mastodon.social/@heycitizen/110076914025449350",
-      "content": `<p>Hello world</p> - ${(new Date()).toUTCString()}`,
-      "to": "https://www.w3.org/ns/activitystreams#Public"
-    }
-  }
 
   try {
     post(data, "https://mastodon.social/inbox")
@@ -105,7 +86,7 @@ app.post('/post', async (req, res) => {
 
 function post(data, endpoint) {
 
-  digestHash = crypto.createHash('sha256').update(JSON.stringify(data)).digest('base64');
+  digestHash = crypto.createHash('sha256').update(JSON.stringify(dataobject)).digest('base64');
 
   const urlinfo = new URL(endpoint)
   const date = (new Date()).toUTCString()
@@ -114,10 +95,9 @@ function post(data, endpoint) {
   const signer = crypto.createSign('sha256');
   signer.update(signed_string);
   signer.end();
-
   const signature = signer.sign(privateKey);
   const header = `keyId="https://abrajam.com/actor/abraham",headers="(request-target) host date digest",signature="${signature.toString('base64')}"`
-
+   
 
   let options = {
     hostname: urlinfo.hostname,
@@ -132,6 +112,19 @@ function post(data, endpoint) {
     },
   }
 
+  options = {
+    hostname: 'mastodon.social',
+    port: 443,
+    path: '/inbox',
+    method: 'POST',
+    headers: {
+      Host: 'mastodon.social',
+      Date: 'Sat, 25 Mar 2023 03:52:55 GMT',
+      Digest: 'SHA-256=24gIolZhDcU6hrltYm/BFmZv4/0oMW8Nmf35a2tvWeM=',
+      Signature: 'keyId="https://abrajam.com/actor/abraham",headers="(request-target) host date digest",signature="tB1sf0DASaG0qIOItvFBhQURlRmFL0trN22TwxaZyQ97mmuLBsTlWIoErzzvckeQlut758ZzWt05FZUyEfLgBKXXhrZl/LpGxQT6pR0uPdLr8rBlmsE8Fn4UyafSaLqoFvZalvIUfobLSOy9nQkBqjaO3HLlg+B6p40iwnfsDBaO2bcQwbzABjpFyh6DgA+uEQwBjvIFGuGwIdrd3GFGCSGH3TpFg3k8mxRh8rwD+LhgzHsgfJf6dDX9Xnz4TNecFTqEEbY/8LEtjMv6J8pGPrL2i9y2wXwpDHlqRvuQL6yh7DFMyT6yMDnfG1FURNFrghBXkpWEIaVDWj9aubfB6Q=="'
+    }
+  }
+
   let req = https.request(options, (res) => {
      console.error("statusCode", res.statusCode)
 
@@ -144,9 +137,77 @@ function post(data, endpoint) {
     console.error("error", error.toString())
   })
 
-  req.write(JSON.stringify(data))
+  req.write(JSON.stringify(dataobject))
   req.end()
 
+}
+
+function VerifySignature(req,  res, next){
+
+    header = {
+      hostname: 'mastodon.social',
+      port: 443,
+      path: '/inbox',
+      method: 'POST',
+      headers: {
+        Host: 'mastodon.social',
+        Date: 'Sat, 25 Mar 2023 03:52:55 GMT',
+        Digest: 'SHA-256=24gIolZhDcU6hrltYm/BFmZv4/0oMW8Nmf35a2tvWeM=',
+        Signature: 'keyId="https://abrajam.com/actor/abraham",headers="(request-target) host date digest",signature="tB1sf0DASaG0qIOItvFBhQURlRmFL0trN22TwxaZyQ97mmuLBsTlWIoErzzvckeQlut758ZzWt05FZUyEfLgBKXXhrZl/LpGxQT6pR0uPdLr8rBlmsE8Fn4UyafSaLqoFvZalvIUfobLSOy9nQkBqjaO3HLlg+B6p40iwnfsDBaO2bcQwbzABjpFyh6DgA+uEQwBjvIFGuGwIdrd3GFGCSGH3TpFg3k8mxRh8rwD+LhgzHsgfJf6dDX9Xnz4TNecFTqEEbY/8LEtjMv6J8pGPrL2i9y2wXwpDHlqRvuQL6yh7DFMyT6yMDnfG1FURNFrghBXkpWEIaVDWj9aubfB6Q=="'
+      }
+    }
+
+
+    headerArray = header.headers.Signature.split(',')
+    headerObject = {}
+    for(headerItem of headerArray){
+      headerObject[headerItem.split("=")[0]] = headerItem.split("=")[1].replace(/^"(.*)"$/, '$1')
+    }
+
+    actorFile = headerObject['keyId']
+    headerKeys = headerObject['headers']
+    signature = headerObject['signature']
+
+    https.get(actorFile, (resp) => {
+    let data = "";
+
+    // A chunk of data has been recieved.
+    resp.on("data", chunk => {
+      data += chunk;
+    });
+
+    resp
+    .on("end", () => {
+
+      publicKey =   JSON.parse(data).publicKey.publicKeyPem 
+      comarision_array = []
+      for(header_compare of headerKeys.split(' ')){
+
+        if(header_compare == '(request-target)'){
+          comarision_array.push('(request-target): post /inbox')
+        } else {
+          comarision_array.push(`${header_compare}: ${ header.headers[header_compare.replace(/(^\w|\s\w)/g, m => m.toUpperCase())]}`)
+        }
+
+      }
+
+      verifier = crypto.createVerify("sha256");
+      verifier.update(comarision_array.join('\n'))
+      result = verifier.verify(publicKey, signature, 'base64');
+      dataHash = crypto.createHash('sha256').update(JSON.stringify(dataobject)).digest('base64');
+      digestMatch = `SHA-256=${dataHash}` == header.headers['Digest']
+      if(result && digestMatch){
+        next()
+      }
+       
+    });
+  })
+  .on("error", err => {
+    console.log("Error: " + err.message);
+  });
+
+    
+   
 }
 
 
@@ -157,5 +218,26 @@ if(!!privateKey == false){
   console.error("private key must be specified in env")
   return
 }
+
+//(new Date()).getTime()
+dataobject = {
+  "@context": "https://www.w3.org/ns/activitystreams",
+
+  "id": `https://abrajam.com/post-${'1'}`,
+  "type": "Create",
+  "actor": "https://abrajam.com/actor/abraham",
+
+  "object": {
+    "id": `${'1'}`,
+    "type": "Note",
+    "published": `${'1'}`,
+    "attributedTo": "https://abrajam.com/actor/abraham",
+    "inReplyTo": "https://mastodon.social/@heycitizen/110076914025449350",
+    "content": `<p>Hello world</p> - -${'1'}`,
+    "to": "https://www.w3.org/ns/activitystreams#Public"
+  }
+}
+
+
 
 app.listen(port, () => console.log(`Mailer listening on port ${port}..."`))
