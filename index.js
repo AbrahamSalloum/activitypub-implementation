@@ -1,25 +1,21 @@
 const express = require('express');
 const app = express();
-const helmet = require("helmet");
 const fs = require('fs');
 const path = require('path');
 const https = require('https')
 const crypto = require('crypto')
 const url = require('url')
-const INBOX = []
+
 require('dotenv').config()
-var bodyParser = require('body-parser')
-
 app.use(express.json({strict: false, type: '*/*'}))
-//app.use(helmet());
-
-
+const INBOX = []
 
 app.get('/.well-known/webfinger', async (req, res) => {
   
   try {
 
     fs.readFile('./.well-known/webfinger', 'utf8', (err, data) => {
+    
       if (err) {
         console.error(err);
         return;
@@ -68,6 +64,46 @@ app.get('/inspect', async (req, res) => {
   res.status(200).json(inbox)
 })
 
+app.get('/users/abraham/following/:page?', async (req, res) => {
+  console.log("follwing", req)
+  if(!!req.params.page == false){
+    follwing = {
+      "@context": "https://www.w3.org/ns/activitystreams",
+      "id": "https://abrajam.com/users/abraham/following",
+      "type": "OrderedCollection",
+      "totalItems": 12,
+      "first": "https://abrajam.com/users/abraham/following/1"
+  }
+  }
+
+  if(req.params.page == 1){
+    follwing = {
+      "@context": "https://www.w3.org/ns/activitystreams",
+      "id": "https://abrajam.com/users/abraham/following/1",
+      "type": "OrderedCollectionPage",
+      "totalItems": 12,
+      
+      "partOf": "https://abrajam.com/users/abraham/following",
+      "orderedItems": [
+          "https://macaw.social/users/yoyoel",
+          "https://toad.social/users/davetroy",
+          "https://masto.ai/users/antonioserrata",
+          "https://masto.ai/users/rbreich",
+          "https://masto.ai/users/parkermolloy",
+          "https://wandering.shop/users/pnh",
+          "https://mstdn.party/users/sixfootcandy",
+          "https://wandering.shop/users/cstross",
+          "https://mastodon.archive.org/users/brewsterkahle",
+          "https://defcon.social/users/SomaFMrusty",
+          "https://aus.social/users/MariekeHardy",
+          "https://aus.social/users/timsims"
+      ]
+  }
+    }
+  
+  res.status(200).json(follwing)
+})
+
 app.post('/inbox', VerifySignature,  async (req, res) => { 
  
   let item = req.body
@@ -79,9 +115,8 @@ app.post('/inbox', VerifySignature,  async (req, res) => {
 
 app.post('/post', async (req, res) => {
   
-  let data = req.body;   
-   console.log("d", data)
-   
+  const data = req.body;   
+
   try {
      
     post(data, "https://mastodon.social/inbox")
@@ -96,7 +131,7 @@ app.post('/post', async (req, res) => {
 
 function post(data, endpoint) {
 
-  digestHash = crypto.createHash('sha256').update(JSON.stringify(data)).digest('base64');
+  const digestHash = crypto.createHash('sha256').update(JSON.stringify(data)).digest('base64');
 
   const urlinfo = new URL(endpoint)
   const date = (new Date()).toUTCString()
@@ -109,7 +144,7 @@ function post(data, endpoint) {
   const header = `keyId="https://abrajam.com/actor/abraham",headers="(request-target) host date digest",signature="${signature.toString('base64')}"`
    
 
-  let options = {
+  const options = {
     hostname: urlinfo.hostname,
     port: 443,
     path: urlinfo.pathname,
@@ -122,7 +157,7 @@ function post(data, endpoint) {
     },
   }
 
-  let req = https.request(options, (res) => {
+  const req = https.request(options, (res) => {
      console.log("POST statusCode", res)
 
     res.on('data', (d) => {
@@ -140,42 +175,41 @@ function post(data, endpoint) {
 }
 
 function VerifySignature(req,  res, next){
-  //curl --REQUEST GET --header 'Accept: application/activity+json' https://mastodon.social/users/user#main-key
   
-    let data = req.body; 
-    let header = req.headers
+    const data = req.body; 
+    const header = req.headers
 
-
-    headerArray = header.signature.split(',')
-    headerObject = {}
-    for(headerItem of headerArray){
-      headerObject[headerItem.split("=")[0]] = headerItem.split("=")[1].replace(/^"(.*)"$/, '$1')
+    const signatureArray = header.signature.split(',')
+    const signatureObject = {}
+    for(signatureheaderItem of signatureArray){
+      signatureObject[signatureheaderItem.split("=")[0]] = signatureheaderItem.split("=")[1].replace(/^"(.*)"$/, '$1')
     }
 
-    actorFile = headerObject['keyId']
-    headerKeys = headerObject['headers']
-    signature = headerObject['signature']
+    const actorFile = signatureObject['keyId']
+    const signatureheaderKeys = signatureObject['headers']
+    const signature = signatureObject['signature']
     
-    let options = {
+    const options = {
       headers: {
         'Accept': 'application/activity+json'
       },
     }
 
     https.get(actorFile, options, (resp) => {
-    let dataG = "";
+    let actorFile = "";
 
     resp.on("data", chunk => {
-      dataG += chunk;
+      actorFile += chunk;
     });
 
     resp
     .on("end", () => {
 
-      publicKey =   JSON.parse(dataG)?.publicKey?.publicKeyPem 
+      const publicKey =   JSON.parse(actorFile)?.publicKey?.publicKeyPem 
       if (!publicKey) return 
-      comarision_array = []
-      for(header_compare of headerKeys.split(' ')){
+      const comarision_array = []
+
+      for(header_compare of signatureheaderKeys.split(' ')){
 
         if(header_compare == '(request-target)'){
           comarision_array.push('(request-target): post /inbox')
@@ -185,13 +219,13 @@ function VerifySignature(req,  res, next){
 
       }
       
-      verifier = crypto.createVerify("sha256");
-      comparethis = comarision_array.join('\n')
+      const verifier = crypto.createVerify("sha256");
+      const comparethis = comarision_array.join('\n')
       verifier.update(comparethis)
-      result = verifier.verify(publicKey, signature, 'base64');
+      const result = verifier.verify(publicKey, signature, 'base64');
       
-      dataHash = crypto.createHash('sha256').update(JSON.stringify(data)).digest('base64');
-      digestMatch = `SHA-256=${dataHash}` == header['digest']
+      const dataHash = crypto.createHash('sha256').update(JSON.stringify(data)).digest('base64');
+      const digestMatch = `SHA-256=${dataHash}` == header['digest']
       if(result && digestMatch){
         next()
       } else {
@@ -216,4 +250,4 @@ if(!!privateKey == false){
 }
 
 
-app.listen(port, () => console.log(`Mailer listening on port ${port}..."`))
+app.listen(port, () => console.log(`activitypub listening on port ${port}..."`))

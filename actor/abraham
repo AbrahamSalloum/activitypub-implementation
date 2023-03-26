@@ -10,6 +10,7 @@
 	"summary" : "Ths is yyy", 
 	"preferredUsername": "a",
 	"inbox": "https://abrajam.com/inbox",
+	"following": "https://abrajam.com/users/abraham/following",
 	"icon": [{
 		"url": "https://abrajam.com/assets/profile.png",
 		"mediaType": "image/png", 
