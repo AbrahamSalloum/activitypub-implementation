@@ -8,9 +8,10 @@
 	"type": "Person",
 	"name" : "Abraham of abrajam",
 	"summary" : "Ths is yyy", 
-	"preferredUsername": "a",
+	"preferredUsername": "b",
 	"inbox": "https://abrajam.com/inbox",
-	"following": "https://abrajam.com/users/abraham/following",
+	"following": "https://abrajam.com/following/b",
+	"followers": "https://abrajam.com/followers/b",
 	"icon": [{
 		"url": "https://abrajam.com/assets/profile.png",
 		"mediaType": "image/png", 
