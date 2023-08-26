@@ -1,8 +1,10 @@
 const express = require('express');
 const app = express();
 const fs = require('fs');
+
+const sqlite3 = require("sqlite3").verbose();
 const path = require('path');
-const https = require('https')
+const { https } = require('follow-redirects');
 const crypto = require('crypto')
 const url = require('url')
 
@@ -140,13 +142,29 @@ app.get('/following/:userid', async (req, res) => {
 
 app.post('/inbox', VerifySignature, async (req, res) => {
 
-  let item = req.body
-
-  INBOX.push(item)
-  console.log(INBOX)
+  let item = JSON.stringify(req.body)-''.
+  db.run(
+  `INSERT INTO data (object) VALUES (?)`, [item], function(err){
+    if(err){
+      console.log(err)
+    }
+    else {
+      console.log('OK')
+  }
+  })
+  selectRows() 
   res.status(200).json({ status: "OK" })
 
 })
+
+function selectRows() {
+  db.each(`SELECT * FROM data`, (error, row) => {
+    if (error) {
+      throw new Error(error.message);
+    }
+    console.log(row);
+  });
+}
 
 app.post('/post', async (req, res) => {
 
@@ -283,4 +301,38 @@ if (!!privateKey == false) {
   return
 }
 
+
+
+
+
+function createDbConnection(filepath) {
+  if (fs.existsSync(filepath)) {
+    console.log("Connection with SQLite has been established");
+    return new sqlite3.Database(filepath);
+  } else {
+    const db = new sqlite3.Database(filepath, (error) => {
+      if (error) {
+        return console.error(error.message);
+      }
+      createTable(db);
+    });
+    console.log("Connection with SQLite has been established");
+    return db;
+  }
+}
+
+function createTable(db){
+  table = `
+  CREATE TABLE data
+  (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    object   TEXT NOT NULL
+  );
+  `
+
+  db.exec(table)
+}
+
+const db = createDbConnection('./activitypub.db')
+console.log(db)
 app.listen(port, () => console.log(`activitypub listening on port ${port}..."`))
