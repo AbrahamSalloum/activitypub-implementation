@@ -139,10 +139,9 @@ app.get('/following/:userid', async (req, res) => {
 
 })
 
-app.post('/inbox', VerifySignature, async (req, res) => {
+app.post('/inbox', VerifySignature, async (req, res) => { //VerifySignature
  
   let object = req.body
-  console.log(object)
   saveObject(db, object)
   
   PrintAllStored(db).then(function(rows) {
@@ -215,14 +214,22 @@ function post(data, endpoint) {
 }
 
 function VerifySignature(req, res, next) {
-
+  const re = new RegExp(/^(.+?)="(.+?)"$/);
+  
   const data = req.body;
-  const header = req.headers
 
+  const header = req.headers
+ 
   const signatureArray = header.signature.split(',')
   const signatureObject = {}
-  for (signatureheaderItem of signatureArray) {
-    signatureObject[signatureheaderItem.split("=")[0]] = signatureheaderItem.split("=")[1].replace(/^"(.*)"$/, '$1')
+  for (let signatureheaderItem of signatureArray) {
+
+    let h = re.exec(signatureheaderItem)
+    if(h) {
+      signatureObject[h[1]] = h[2].replace(/^(.*)$/, "$1")
+      
+    }
+
   }
 
   const actorFile = signatureObject['keyId']
@@ -247,6 +254,7 @@ function VerifySignature(req, res, next) {
 
         const publicKey = JSON.parse(actorFile)?.publicKey?.publicKeyPem
         if (!publicKey) return
+        
         const comarision_array = []
 
         for (header_compare of signatureheaderKeys.split(' ')) {
@@ -259,16 +267,22 @@ function VerifySignature(req, res, next) {
 
         }
 
+      
+
         const verifier = crypto.createVerify("sha256");
         const comparethis = comarision_array.join('\n')
+
         verifier.update(comparethis)
+        
         const result = verifier.verify(publicKey, signature, 'base64');
 
         const dataHash = crypto.createHash('sha256').update(JSON.stringify(data)).digest('base64');
+        console.log(result, header['digest'] == `SHA-256=${dataHash}`)
         const digestMatch = `SHA-256=${dataHash}` == header['digest']
         if (result && digestMatch) {
           next()
         } else {
+          console.log("signature does not match. ")
           res.status(401).send("signature does not match. ")
         }
 
@@ -291,5 +305,4 @@ if (!!privateKey == false) {
 
 
 const db = createDbConnection('./activitypub.db')
-console.log(db)
 app.listen(port, () => console.log(`activitypub listening on port ${port}..."`))
