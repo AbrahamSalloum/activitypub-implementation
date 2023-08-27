@@ -8,7 +8,7 @@ const sqlite3 = require("sqlite3").verbose();
     } else {
       const db = new sqlite3.Database(filepath, (error) => {
         if (error) {
-          return console.error(error.message);
+          return console.error("err", error.message);
         }
         createTable(db);
       });
@@ -21,11 +21,11 @@ const sqlite3 = require("sqlite3").verbose();
     let type = object.type.toUpperCase()
     let item = JSON.stringify(object)
 
+    
+    storeReceivedObject(db, item);
+
     if(type.toUpperCase() == "DELETE"){
         storeDeleteObject(db, item)
-        db.each('SELECT * FROM deletes', function(err, row) {
-            console.log(err, row)
-        })
     }
 
     if(type.toUpperCase() == "POST"){ 
@@ -45,9 +45,10 @@ const sqlite3 = require("sqlite3").verbose();
     } 
     
     
+  }
 
-
-
+  function storeReceivedObject(db, item){
+    db.each(`INSERT INTO received (object) VALUES (?)`, [item], callbk)
   }
 
   function storeDeleteObject(db, item){
@@ -74,6 +75,22 @@ const sqlite3 = require("sqlite3").verbose();
     console.log(err, row)
   }
 
+  function PrintAllStored(db) {
+    
+    return new Promise((resovle, reject) => {
+
+    db.each(`SELECT * FROM received`, (err, row) => {
+        
+            if(err) {
+                reject(err)
+            }
+           
+            resovle(row)
+        })
+    })
+
+  }
+
 
 
 
@@ -81,6 +98,7 @@ const sqlite3 = require("sqlite3").verbose();
   
   function createTable(db){
     tables = [
+    `CREATE TABLE received (ID INTEGER PRIMARY KEY AUTOINCREMENT, object TEXT NOT NULL);`,
     `CREATE TABLE deletes (ID INTEGER PRIMARY KEY AUTOINCREMENT, object TEXT NOT NULL);`,
     `CREATE TABLE posts (ID INTEGER PRIMARY KEY AUTOINCREMENT, object TEXT NOT NULL);`, 
     `CREATE TABLE follows (ID INTEGER PRIMARY KEY AUTOINCREMENT, object TEXT NOT NULL);`, 
@@ -89,9 +107,9 @@ const sqlite3 = require("sqlite3").verbose();
     ]
   
     tables.forEach(function(table){
-        db.exec(table)
+        db.exec(table, callbk)
     })
     
   }
 
-  module.exports = { createDbConnection, saveObject }
+  module.exports = { createDbConnection, PrintAllStored, saveObject }

@@ -1,14 +1,13 @@
 const express = require('express');
 const app = express();
 const fs = require('fs');
-const {createDbConnection, saveObject} = require('./database');
+const {createDbConnection, PrintAllStored, saveObject} = require('./database');
 const path = require('path');
 const { https } = require('follow-redirects');
 const crypto = require('crypto')
 
 require('dotenv').config()
 app.use(express.json({ strict: false, type: '*/*' }))
-const INBOX = []
 
 app.get('/.well-known/webfinger', async (req, res) => {
 
@@ -62,9 +61,11 @@ app.get('/assets/:asset([^/]*)*', async (req, res) => {
 
 app.get('/inspect', async (req, res) => {
   
-  let inbox = {}
-  inbox.inbox = INBOX
-  res.status(200).json(inbox)
+  PrintAllStored(db).then(function(rows) {
+    console.log(rows)
+    res.status(200).send(rows)
+  })
+  
 
 })
 
@@ -144,7 +145,10 @@ app.post('/inbox', VerifySignature, async (req, res) => {
   console.log(object)
   saveObject(db, object)
   
-  res.status(200).json({ status: "OK" })
+  PrintAllStored(db).then(function(rows) {
+    console.log(rows)
+    res.status(200).send(rows)
+  })
 
 })
 
