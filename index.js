@@ -1,11 +1,10 @@
 const express = require('express');
 const app = express();
 const fs = require('fs');
-const {createDbConnection, printEverything, saveObject} = require('./database');
+const {createDbConnection, saveObject} = require('./database');
 const path = require('path');
 const { https } = require('follow-redirects');
 const crypto = require('crypto')
-// const url = require('url')
 
 require('dotenv').config()
 app.use(express.json({ strict: false, type: '*/*' }))
@@ -138,12 +137,13 @@ app.get('/following/:userid', async (req, res) => {
   res.status(200).json(following)
 
 })
-//VerifySignature
-app.post('/inbox', async (req, res) => {
+
+app.post('/inbox', VerifySignature, async (req, res) => {
  
   let object = req.body
+  console.log(object)
   saveObject(db, object)
-  printEverything(db)
+  
   res.status(200).json({ status: "OK" })
 
 })

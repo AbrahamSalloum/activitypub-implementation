@@ -23,6 +23,9 @@ const sqlite3 = require("sqlite3").verbose();
 
     if(type.toUpperCase() == "DELETE"){
         storeDeleteObject(db, item)
+        db.each('SELECT * FROM deletes', function(err, row) {
+            console.log(err, row)
+        })
     }
 
     if(type.toUpperCase() == "POST"){ 
@@ -48,84 +51,41 @@ const sqlite3 = require("sqlite3").verbose();
   }
 
   function storeDeleteObject(db, item){
-    db.run(
-        `INSERT INTO deletes (object) VALUES (?)`, [item], function(err){
-          if(err){
-            console.log(err)
-          }
-          else {
-            console.log('OK')
-        }
-        })
+    db.each(`INSERT INTO deletes (object) VALUES (?)`, [item], callbk)
   }
 
   function storePostObject(db, item){
-    db.run(
-        `INSERT INTO posts (object) VALUES (?)`, [item], function(err){
-          if(err){
-            console.log(err)
-          }
-          else {
-            console.log('OK')
-        }
-        })
+    db.each(`INSERT INTO posts (object) VALUES (?)`, [item], callbk)
   }
 
   function storeFollowObject(db, item){
-    db.run(
-        `INSERT INTO follows (object) VALUES (?)`, [item], function(err){
-          if(err){
-            console.log(err)
-          }
-          else {
-            console.log('OK')
-        }
-        })
+    db.each(`INSERT INTO follows (object) VALUES (?)`, [item], callbk)
   }
 
   function storeBlockObject(db, item){
-    db.run(
-        `INSERT INTO blocks (object) VALUES (?)`, [item], function(err){
-          if(err){
-            console.log(err)
-          }
-          else {
-            console.log('OK')
-        }
-        })
+    db.each(`INSERT INTO blocks (object) VALUES (?)`, [item], callbk)
   }
 
   function storeUndoObject(db, item){
-    db.run(
-        `INSERT INTO undoes (object) VALUES (?)`, [item], function(err){
-          if(err){
-            console.log(err)
-          }
-          else {
-            console.log('OK')
-        }
-        })
+    db.each(`INSERT INTO undoes (object) VALUES (?)`, [item], callbk)
+  }
+
+  function callbk(err, row) {
+    console.log(err, row)
   }
 
 
 
 
-  function printEverything(db) {
-    db.each(`SELECT * FROM deletes`, (error, row) => {
-      if (error) {
-        throw new Error(error.message);
-      }
-      console.log(row);
-    });
-  }
+
   
   function createTable(db){
     tables = [
-    `CREATE TABLE deletes (ID INTEGER PRIMARY KEY AUTOINCREMENT, object   TEXT NOT NULL);`,
-    `CREATE TABLE posts (ID INTEGER PRIMARY KEY AUTOINCREMENT, object   TEXT NOT NULL);`, 
-    `CREATE TABLE follows (ID INTEGER PRIMARY KEY AUTOINCREMENT, object   TEXT NOT NULL);`, 
-    `CREATE TABLE blocks (ID INTEGER PRIMARY KEY AUTOINCREMENT, object   TEXT NOT NULL);`,
-    `CREATE TABLE undoes (ID INTEGER PRIMARY KEY AUTOINCREMENT, object   TEXT NOT NULL);`,
+    `CREATE TABLE deletes (ID INTEGER PRIMARY KEY AUTOINCREMENT, object TEXT NOT NULL);`,
+    `CREATE TABLE posts (ID INTEGER PRIMARY KEY AUTOINCREMENT, object TEXT NOT NULL);`, 
+    `CREATE TABLE follows (ID INTEGER PRIMARY KEY AUTOINCREMENT, object TEXT NOT NULL);`, 
+    `CREATE TABLE blocks (ID INTEGER PRIMARY KEY AUTOINCREMENT, object TEXT NOT NULL);`,
+    `CREATE TABLE undoes (ID INTEGER PRIMARY KEY AUTOINCREMENT, object TEXT NOT NULL);`,
     ]
   
     tables.forEach(function(table){
@@ -134,4 +94,4 @@ const sqlite3 = require("sqlite3").verbose();
     
   }
 
-  module.exports = { createDbConnection, printEverything, saveObject }
+  module.exports = { createDbConnection, saveObject }
