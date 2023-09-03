@@ -124,4 +124,4 @@ function createTable(db) {
 
 }
 
-module.exports = { createDbConnection, PrintAllStored, saveObject }
+module.exports = { db: createDbConnection('./activitypub.db'), PrintAllStored, saveObject }
