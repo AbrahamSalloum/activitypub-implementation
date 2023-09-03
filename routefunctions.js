@@ -1,6 +1,6 @@
 const {db, PrintAllStored, saveObject} = require('./database');
 const path = require('path');
-const  {VerifySignature, post} = require('./utils.js')
+const  {post} = require('./utils.js')
 
 getwebfinger = async (req, res) => {
 
@@ -160,4 +160,15 @@ getwebfinger = async (req, res) => {
   
   }
 
-  module.exports = {getwebfinger, getactor, getasset, getinspect, getfollowingpage, getfollowerspage, getfollowers, getfollowing, postmessage, postinbox}
+  module.exports = {
+    getwebfinger, 
+    getactor, 
+    getasset, 
+    getinspect, 
+    getfollowingpage,
+    getfollowerspage, 
+    getfollowers,
+    getfollowing, 
+    postmessage,
+    postinbox
+}

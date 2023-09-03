@@ -1,15 +1,9 @@
 const express = require('express');
 const app = express();
-// const fs = require('fs');
-const {createDbConnection} = require('./database');
-const path = require('path');//
-// const { https } = require('follow-redirects');
-// const crypto = require('crypto')
 const {getwebfinger, getactor, getasset, getinspect, getfollowingpage, getfollowerspage, getfollowers, getfollowing, postmessage, postinbox} = require('./routefunctions.js')
-const  {VerifySignature, post} = require('./utils.js')
+const  {VerifySignature} = require('./utils.js')
 require('dotenv').config()
 app.use(express.json({ strict: false, type: '*/*' }))
-
 
 
 app.get('/.well-known/webfinger', getwebfinger)
@@ -24,7 +18,6 @@ app.post('/inbox', VerifySignature, postinbox)
 app.post('/post', postmessage)
 
 
-
 const port = process.env.APPPORT;
 const privateKey = process.env.PRIVATEKEY.replace(/\\n/g, '\n') || undefined;
 
@@ -33,6 +26,4 @@ if (!!privateKey == false) {
   return
 }
 
-
-//const db = createDbConnection('./activitypub.db')
 app.listen(port, () => console.log(`activitypub listening on port ${port}..."`))
