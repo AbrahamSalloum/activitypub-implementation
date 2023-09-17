@@ -1,0 +1,73 @@
+<html xmlns:office="urn:schemas-microsoft-com:office:office"
+      xmlns:word="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+
+<br>
+
+
+
+<style>
+    table, tr, td, th{
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 5px;
+        text-align: left;
+    }
+
+    .normal {
+        font-family:"Calibri",sans-serif; 
+        line-height:107%;
+        font-size:11.0pt;
+        mso-ascii-font-family:Calibri;
+        mso-ascii-theme-font:minor-latin;
+    }
+
+    @page portrait_A4_page  {
+        size:595.3pt 841.9pt;
+        margin:72.0pt 72.0pt 72.0pt 72.0pt;
+        mso-header-margin:35.4pt;
+        mso-footer-margin:35.4pt;
+        mso-paper-source:0;
+    }
+
+    div.portrait_A4_page { page:portrait_A4_page; }
+
+    @page landscape_A4_page {
+        size:841.9pt 595.3pt;
+        mso-page-orientation:landscape;
+        margin:72.0pt 72.0pt 72.0pt 72.0pt;
+        mso-header-margin:35.45pt;
+        mso-footer-margin:35.45pt;
+        mso-paper-source:0;
+    }
+
+    div.landscape_A4_page { page:landscape_A4_page; }
+
+</style>
+
+<div class=portrait_A4_page>
+  <span class=normal>
+    <p>standard A4 portrait page information</p>
+  </span>
+
+  <br clear=all style='mso-special-character:line-break; page-break-before:always'>      
+</div>    
+
+<br clear=all style='page-break-before:always; mso-break-type:section-break'>
+
+<div class=landscape_A4_page>
+    <table class=normal>
+        <tr>
+            <td>a table that goes really wide</td>  
+        </tr>
+    </table>
+    <br clear=all style='mso-special-character:line-break; page-break-before:always'>    
+</div>
+
+<br clear=all style='page-break-before:always; mso-break-type:section-break'>
+<div class=portrait_A4_page>
+    <span class=normal>
+      <p>standard A4 portrait page information</p>
+    </span>
+    
+  </div> 
