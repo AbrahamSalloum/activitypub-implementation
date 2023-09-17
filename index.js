@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
-const {getwebfinger, getactor, getasset, getinspect, getfollowingpage, getfollowerspage, getfollowers, getfollowing, postmessage, postinbox} = require('./routefunctions.js')
-const  {VerifySignature} = require('./utils.js')
+const { getwebfinger, getactor, getasset, getinspect, getfollowingpage, getfollowerspage, getfollowers, getfollowing, postmessage, postinbox } = require('./routefunctions.js')
+const { VerifySignature } = require('./utils.js')
 require('dotenv').config()
 app.use(express.json({ strict: false, type: '*/*' }))
 

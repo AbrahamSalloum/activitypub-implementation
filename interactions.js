@@ -1,6 +1,6 @@
 
 function createFollowRequest(info) {
-    return `
+  return `
     {
         "@context" : "https://www.w3.org/ns/activitystreams",
         "id" : "https://abrajam.com/follow-${id}",
@@ -13,7 +13,7 @@ function createFollowRequest(info) {
 
 
 function createAccept(info) {
-    return `{
+  return `{
         "@context": "https://www.w3.org/ns/activitystreams",
         "id": "https://abrajam.com/reject/follows/${id}",
         "type": "Reject",
@@ -22,8 +22,8 @@ function createAccept(info) {
       }`
 }
 
-function createLike(info){
-    return `{
+function createLike(info) {
+  return `{
         "@context": "https://www.w3.org/ns/activitystreams",
         "summary": "user liked this",
         "type": "Like",
@@ -32,8 +32,8 @@ function createLike(info){
       }`
 }
 
-function createDelete(info){
-    return `
+function createDelete(info) {
+  return `
     {
         "@context": "https://www.w3.org/ns/activitystreams",
         "summary": "user deleted this",
@@ -44,8 +44,8 @@ function createDelete(info){
       }`
 }
 
-function createNote(info){
-    return `{
+function createNote(info) {
+  return `{
         "@context": "https://www.w3.org/ns/activitystreams",
         "summary": "Sally created a note",
         "type": "Create",
@@ -59,8 +59,8 @@ function createNote(info){
       }`
 }
 
-function createInReplyTo(info){
-    return `{
+function createInReplyTo(info) {
+  return `{
         "@context": "https://www.w3.org/ns/activitystreams",
         "summary": "Sally created a note",
         "type": "Create",
@@ -74,4 +74,4 @@ function createInReplyTo(info){
       }`
 }
 
-module.exports = { createFollowRequest, createAccept, createLike, createDelete, createNote, createInReplyTo}
+module.exports = { createFollowRequest, createAccept, createLike, createDelete, createNote, createInReplyTo }
