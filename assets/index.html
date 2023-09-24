@@ -5,20 +5,21 @@
 </head>
 
 <body>
-    <details>
+
+    <details id="show" open>
         <summary>webfinger</summary>
         <table>
             <tr>
                 <td>
-                    <input id="webfingeruser" type="text" />
-                </td>
-                <td>
-                    <button id="fingerbtn">finger</button>
+                    <input id="webfingeruser" type="text" /><button id="fingerbtn">finger</button>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <textarea id="webfinger" style="width:1000px;height:1000px"></textarea>
+                    <textarea id="webfingerarea" style="width:500;height:500"></textarea>
+                </td>
+                <td>
+                    <textarea id="actorfilearea" style="width:500;height:500"></textarea>
                 </td>
             </tr>
             <tr>
@@ -87,7 +88,7 @@
                 <td><textarea id="followINGsarea"></textarea></td>
             </tr>
         </table>
-    </details>    
+    </details>
 </body>
 
 
@@ -97,32 +98,43 @@
     $(document).ready(function () {
 
         basedomain = window.location.origin
-
+        webfinger = undefined
         actorfile = undefined
 
-        $('#fingerbtn').on('click', function(){
+        $('details').hide()
+        $('#show').show()
+
+        $('#fingerbtn').on('click', function () {
 
             user = $('#webfingeruser').val() || 'b@abrajam.com'
+
             $.ajax({
                 type: "GET",
                 url: `${basedomain}/.well-known/webfinger/${user}`,
-                
-                success: (d) => {
-                    console.log(d)
-                },
-                contentType: "application/json; charset=utf-8",
 
+                success: (d) => {
+                    webfinger = d
+                    $('#webfingerarea').text(JSON.stringify(d, null, 4))
+                    userinfo = webfinger['links'].find(item => item.type == "application/activity+json")
+                    actorpath = userinfo['href']
+                    getActor(actorpath)
+                },
+                contentType: "application/json; charset=utf-8"
             });
         })
 
 
         function getActor(actorpath) {
+
             $.ajax({
                 type: "GET",
                 url: actorpath,
                 // data: $('textarea').text(),
                 success: (d) => {
                     actorfile = d
+                    $('details').show()
+                    $("#actorfilearea").text(JSON.stringify(d, null, 4))
+                    
                 },
                 contentType: "application/json; charset=utf-8",
 
@@ -132,9 +144,12 @@
         $('#getinbox').on('click', function () {
             $.ajax({
                 type: "GET",
-                url: "https://abrajam.com/inspect",
+                url: "/inspect",
                 // data: $('textarea').text(),
-                success: (d) => $('#inboxarea').text(JSON.stringify(d, null, 4)),
+                success: (d) => {
+                    
+                    $('#inboxarea').text(JSON.stringify(d, null, 4))
+                },
                 contentType: "application/json; charset=utf-8",
 
             });
@@ -149,13 +164,13 @@
 
                     "id": `https://abrajam.com/post-${id}`,
                     "type": "Create",
-                    "actor": "https://abrajam.com/actor/abraham",
+                    "actor": actorfile.id,
 
                     "object": {
                         "id": `https://abrajam.com/post-${id}`,
                         "type": "Note",
                         "published": `${id}`,
-                        "attributedTo": "https://abrajam.com/actor/abraham",
+                        "attributedTo": actorfile.id,
                         "inReplyTo": "https://mastodon.social/@heycitizen/110998990554681845",
                         "content": `<p>Hello world</p> -${id}`,
                         "to": "https://www.w3.org/ns/activitystreams#Public"
@@ -183,7 +198,7 @@
 
             $.ajax({
                 type: "POST",
-                url: "https://abrajam.com/post",
+                url: "/post",
                 data: $('#actionselector').text(),
                 success: (d) => $('#msg').html(d),
                 contentType: "application/json; charset=utf-8",
@@ -199,7 +214,7 @@
             if ($(getfollowersbutton).attr("next")) {
                 followersurl = $(getfollowersbutton).attr("next")
             } else {
-                followersurl = `https://abrajam.com/followers/${user}` //relace with from actors file
+                followersurl = actorfile.followers 
             }
 
             $.ajax({
@@ -237,7 +252,7 @@
             if ($(getfollowersbutton).attr("next")) {
                 followersurl = $(getfollowersbutton).attr("next")
             } else {
-                followersurl = `https://abrajam.com/following/${user}` //relace with from actors file
+                followersurl = actorfile.following 
             }
 
             $.ajax({
@@ -250,7 +265,10 @@
                         $.ajax({
                             type: "GET",
                             url: d.first,
-                            success: (d) => $('#followINGsarea').text(JSON.stringify(d, null, 4)),
+                            success: (d) => {
+                              
+                                $('#followINGsarea').text(JSON.stringify(d, null, 4))
+                            },
                             contentType: "application/json; charset=utf-8",
 
                         });
@@ -264,7 +282,7 @@
 
             });
 
-})        
+        })
     });
 </script>
 
