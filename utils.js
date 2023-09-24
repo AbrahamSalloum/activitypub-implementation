@@ -1,6 +1,7 @@
 const { https } = require('follow-redirects');
 const crypto = require('crypto')
 require('dotenv').config()
+const axios = require('axios');
 
 function VerifySignature(req, res, next) {
     const re = new RegExp(/^(.+?)="(.+?)"$/);
@@ -126,5 +127,21 @@ function post(data, endpoint) {
     req.end()
 
 }
+
+
+async function getdatafromurl(url){
+
+
+    return axios.get(url, { 
+    headers: {'Accept':'application/ld+json'}
+    })
+
+
+    
+}
+
+
+
 const privateKey = process.env.PRIVATEKEY.replace(/\\n/g, '\n') || undefined;
-module.exports = { VerifySignature, post }
+module.exports = { VerifySignature, post, getdatafromurl}
+

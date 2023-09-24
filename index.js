@@ -10,9 +10,10 @@ app.get('/.well-known/webfinger', getwebfinger)
 app.get('/actor/:userid', getactor)
 app.get('/assets/:asset([^/]*)*', getasset)
 app.get('/inspect', getinspect)
-app.get('/following/:userid/:page', getfollowingpage)
-app.get('/followers/:userid/:page', getfollowerspage)
+
+app.get('/followerslist/:page', getfollowingpage)
 app.get('/followers/:userid', getfollowers)
+
 app.get('/following/:userid', getfollowing)
 app.post('/inbox', VerifySignature, postinbox)
 app.post('/post', postmessage)

@@ -1,6 +1,6 @@
 const { db, PrintAllStored, saveObject } = require('./database');
 const path = require('path');
-const { post } = require('./utils.js')
+const { post, getdatafromurl} = require('./utils.js')
 const fs = require('fs');
 
 getwebfinger = async (req, res) => {
@@ -64,29 +64,25 @@ getinspect = async (req, res) => {
 
 }
 
-getfollowingpage = async (req, res) => {
 
-    if (req.params.page == 1) {
-        following = {
-            "@context": "https://www.w3.org/ns/activitystreams",
-            "id": "https://abrajam.com/following/b/1",
-            "type": "OrderedCollectionPage",
-            "totalItems": 2,
-
-            "partOf": "https://abrajam.com/following/b",
-            "orderedItems": [
-                "https://mastodon.social/users/Gargron",
-                "https://mastodon.archive.org/users/brewsterkahle"
-            ]
-        }
-    }
-
-    res.status(200).json(following)
-
+getfollowerspage = async(req, res) => {
+    return 1
 }
 
-getfollowerspage = async (req, res) => {
 
+getfollowingpage = async (req, res) => {
+    
+    followerlist = atob(req.params.page)
+    console.log(followerlist)
+    try {
+     let x = await getdatafromurl(followerlist)
+     console.log(x)
+     res.status(200).json(x.data)
+    } catch(err) {
+     console.log(err)
+    }
+    
+    return 
     if (req.params.page == 1) {
         followers = {
             "@context": "https://www.w3.org/ns/activitystreams",
@@ -102,21 +98,31 @@ getfollowerspage = async (req, res) => {
         }
     }
 
-    res.status(200).json(followers)
+
 
 }
 
 getfollowers = async (req, res) => {
 
-    followers = {
-        "@context": "https://www.w3.org/ns/activitystreams",
-        "id": "https://abrajam.com/followers/b",
-        "type": "OrderedCollection",
-        "totalItems": 9,
-        "first": "https://abrajam.com/followers/b/1"
-    }
+   followerlist = atob(req.params.userid)
+   console.log(followerlist)
+   try {
+    let x = await getdatafromurl(followerlist)
+    console.log(x)
+    res.status(200).json(x.data)
+   } catch(err) {
+    console.log(err)
+   }
+    
+    // followers = {
+    //     "@context": "https://www.w3.org/ns/activitystreams",
+    //     "id": "https://abrajam.com/followers/b",
+    //     "type": "OrderedCollection",
+    //     "totalItems": 9,
+    //     "first": "https://abrajam.com/followers/b/1"
+    // }
 
-    res.status(200).json(followers)
+    
 
 }
 

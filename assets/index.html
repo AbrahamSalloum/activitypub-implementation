@@ -69,12 +69,15 @@
         <summary>Get Followers</summary>
         <table>
             <tr>
-                <td><button id="getfollowers">Get Followers</button></td>
-                <td>user: <input type="text" id="following_user" placeholder="abraham"></td>
+                <td><button id="getfollowers">Get Followers</button>
+                user: <input type="text" id="following_user" placeholder="abraham"></td>
+                <td><button id="prevfollowers">prev</button> <button id="nextfollowers">next</button></td>
             </tr>
             <tr>
                 <td><textarea id="followersarea"></textarea></td>
+                <td><textarea id="followerslist"></textarea></td>
             </tr>
+
         </table>
     </details>
     <details>
@@ -106,7 +109,7 @@
 
         $('#fingerbtn').on('click', function () {
 
-            user = $('#webfingeruser').val() || 'b@abrajam.com'
+            user = $('#webfingeruser').val() || 'gargron@mastodon.social'
 
             $.ajax({
                 type: "GET",
@@ -201,6 +204,7 @@
                 url: "/post",
                 data: $('#actionselector').text(),
                 success: (d) => $('#msg').html(d),
+                headers: {"Accept": '*'},
                 contentType: "application/json; charset=utf-8",
             });
 
@@ -211,35 +215,59 @@
             user = $('#following_user').val() || 'abraham'
             getfollowersbutton = this
             console.log(getfollowersbutton)
-            if ($(getfollowersbutton).attr("next")) {
-                followersurl = $(getfollowersbutton).attr("next")
-            } else {
-                followersurl = actorfile.followers 
-            }
+            followersurl = actorfile.followers
 
             $.ajax({
                 type: "GET",
-                url: followersurl,
-
+                url: `/followers/${btoa(followersurl)}`,
+                
                 success: function (d) {
-                    d.next = "http://google.com"
-                    if (d.first) {
-                        $.ajax({
-                            type: "GET",
-                            url: d.first,
-                            success: (d) => $('#followersarea').text(JSON.stringify(d, null, 4)),
-                            contentType: "application/json; charset=utf-8",
-
-                        });
-                    }
-
-                    else if (d.next) {
-                        $(getfollowersbutton).attr("next", d.next)
-                    }
+                    console.log(d)
+                    $('#followersarea').text(JSON.stringify(d, null, 4))
+                    console.log(d.first)
+                    $.ajax({
+                        type: "GET",
+                        url: `/followerslist/${encodeURIComponent(btoa(d.first))}`,
+                        success: function (d) {
+                            $('#nextfollowers').attr("next", d.next)
+                            $('#followerslist').text(JSON.stringify(d, null, 4))
+                        }
+                    })
                 },
-                contentType: "application/json; charset=utf-8",
+
 
             });
+
+        })
+
+
+        $('#nextfollowers').on('click', function(){
+                        next = $(this).attr('next')
+                        
+            $.ajax({
+                        type: "GET",
+                        url: `/followerslist/${encodeURIComponent(btoa(next))}`,
+                        success: function (d) {
+                            $('#nextfollowers').attr("next", d.next)
+                            $('#prevfollowers').attr("prev", d.prev)
+                            $('#followerslist').text(JSON.stringify(d, null, 4))
+                        }
+                    })
+
+        })
+
+        $('#prevfollowers').on('click', function(){
+                        prev = $(this).attr('prev')
+                        
+            $.ajax({
+                        type: "GET",
+                        url: `/followerslist/${encodeURIComponent(btoa(prev))}`,
+                        success: function (d) {
+                            $('#nextfollowers').attr("next", d.next )
+                            $('#prevfollowers').attr("prev", d.prev)
+                            $('#followerslist').text(JSON.stringify(d, null, 4))
+                        }
+                    })
 
         })
 
@@ -285,5 +313,12 @@
         })
     });
 </script>
+
+<style>
+    textarea {
+        width: 500px; 
+        height: 500px; 
+    }
+</style>
 
 </html>
