@@ -6,7 +6,7 @@ require('dotenv').config()
 app.use(express.json({ strict: false, type: '*/*' }))
 
 
-app.get('/.well-known/webfinger', getwebfinger)
+app.get('/.well-known/webfinger/:userid', getwebfinger)
 app.get('/actor/:userid', getactor)
 app.get('/assets/:asset([^/]*)*', getasset)
 app.get('/inspect', getinspect)

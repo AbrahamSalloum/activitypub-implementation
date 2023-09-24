@@ -2,57 +2,92 @@
 
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
-
 </head>
 
 <body>
     <details>
-        <summary>Post</summary>
-    <table>
-        <tr>
-            <td>
-                <select id="actionselector">
-                    <option value="select">select</option>
-                    <option value="reply">reply</option>
-                </select>
-                <button id="sendbutton">send</button>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <textarea style="width:1000px;height:1000px"></textarea>
-            </td>
-        </tr>
-        <tr>
-            <td id="msg">
+        <summary>webfinger</summary>
+        <table>
+            <tr>
+                <td>
+                    <input id="webfingeruser" type="text" />
+                </td>
+                <td>
+                    <button id="fingerbtn">finger</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <textarea id="webfinger" style="width:1000px;height:1000px"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td id="msg">
 
-            </td>
-        </tr>
-    </table>
-</details>
-<details>
-    <summary>Get Inbox</summary>
-    <table>
-        <tr>
-            <td><button id="getinbox">Get Inbox</button></td>
-        </tr>
-        <tr>
-            <td><textarea id="inboxarea"></textarea></td>
-        </tr>
-    </table>
-</details>
-<details>
-    <summary>Get Followers</summary>
-    <table>
-        <tr>
-            <td><button id="getfollowers">Get Followers</button></td>
-            <td>user: <input type="text" id="following_user" placeholder="abraham"></td>
-        </tr>
-        <tr>
-            <td><textarea id="followersarea"></textarea></td>
-        </tr>
-    </table>
-</details>
+                </td>
+            </tr>
+        </table>
+    </details>
+
+    <details>
+        <summary>Post</summary>
+        <table>
+            <tr>
+                <td>
+                    <select id="actionselector">
+                        <option value="select">select</option>
+                        <option value="reply">reply</option>
+                    </select>
+                    <button id="sendbutton">send</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <textarea style="width:1000px;height:1000px"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td id="msg">
+
+                </td>
+            </tr>
+        </table>
+    </details>
+    <details>
+        <summary>Get Inbox</summary>
+        <table>
+            <tr>
+                <td><button id="getinbox">Get Inbox</button></td>
+            </tr>
+            <tr>
+                <td><textarea id="inboxarea"></textarea></td>
+            </tr>
+        </table>
+    </details>
+    <details>
+        <summary>Get Followers</summary>
+        <table>
+            <tr>
+                <td><button id="getfollowers">Get Followers</button></td>
+                <td>user: <input type="text" id="following_user" placeholder="abraham"></td>
+            </tr>
+            <tr>
+                <td><textarea id="followersarea"></textarea></td>
+            </tr>
+        </table>
+    </details>
+    <details>
+        <summary>Get FollowING</summary>
+        <table>
+            <tr>
+                <td><button id="getfollowING">Get FollowING</button></td>
+                <td>user: <input type="text" id="follows" placeholder="abraham"></td>
+            </tr>
+            <tr>
+                <td><textarea id="followINGsarea"></textarea></td>
+            </tr>
+        </table>
+    </details>    
 </body>
 
 
@@ -61,8 +96,25 @@
 
     $(document).ready(function () {
 
+        basedomain = window.location.origin
+
         actorfile = undefined
-        
+
+        $('#fingerbtn').on('click', function(){
+
+            user = $('#webfingeruser').val() || 'b@abrajam.com'
+            $.ajax({
+                type: "GET",
+                url: `${basedomain}/.well-known/webfinger/${user}`,
+                
+                success: (d) => {
+                    console.log(d)
+                },
+                contentType: "application/json; charset=utf-8",
+
+            });
+        })
+
 
         function getActor(actorpath) {
             $.ajax({
@@ -73,18 +125,18 @@
                     actorfile = d
                 },
                 contentType: "application/json; charset=utf-8",
-               
+
             });
         }
 
-        $('#getinbox').on('click', function(){
+        $('#getinbox').on('click', function () {
             $.ajax({
                 type: "GET",
                 url: "https://abrajam.com/inspect",
                 // data: $('textarea').text(),
-                success: (d) => $('#inboxarea').text(JSON.stringify(d,null, 4)),
+                success: (d) => $('#inboxarea').text(JSON.stringify(d, null, 4)),
                 contentType: "application/json; charset=utf-8",
-               
+
             });
         })
 
@@ -117,8 +169,6 @@
             if (this.value == "reply") {
                 console.log(jsontemplate)
                 $('textarea').text(JSON.stringify(jsontemplate["reply"], undefined, 4))
-
-
             }
 
 
@@ -126,7 +176,7 @@
 
         })
 
-        $('#sendbutton').on('click', function(){
+        $('#sendbutton').on('click', function () {
             operation = $('#actionselector').value
             data = $('#actionselector').text()
             console.log(data)
@@ -137,47 +187,84 @@
                 data: $('#actionselector').text(),
                 success: (d) => $('#msg').html(d),
                 contentType: "application/json; charset=utf-8",
-               
             });
 
         })
-        
-        $('#getfollowers').on('click', function(){
+
+        $('#getfollowers').on('click', function () {
 
             user = $('#following_user').val() || 'abraham'
             getfollowersbutton = this
             console.log(getfollowersbutton)
-            if($(getfollowersbutton).attr("next")) {
+            if ($(getfollowersbutton).attr("next")) {
                 followersurl = $(getfollowersbutton).attr("next")
             } else {
                 followersurl = `https://abrajam.com/followers/${user}` //relace with from actors file
             }
-            alert(user)
+
             $.ajax({
                 type: "GET",
                 url: followersurl,
-               
-                success: function(d) {
+
+                success: function (d) {
                     d.next = "http://google.com"
-                    if(d.first) {
+                    if (d.first) {
                         $.ajax({
                             type: "GET",
                             url: d.first,
-                            success: (d) => $('#followersarea').text(JSON.stringify(d,null, 4)),
+                            success: (d) => $('#followersarea').text(JSON.stringify(d, null, 4)),
                             contentType: "application/json; charset=utf-8",
-               
-            });
-                    } 
-                    
-                    else if(d.next) {
+
+                        });
+                    }
+
+                    else if (d.next) {
                         $(getfollowersbutton).attr("next", d.next)
                     }
                 },
                 contentType: "application/json; charset=utf-8",
-               
+
             });
 
         })
+
+
+        $('#getfollowING').on('click', function () {
+
+            user = $('#follows').val() || 'abraham'
+            getfollowersbutton = this
+            console.log(getfollowersbutton)
+            if ($(getfollowersbutton).attr("next")) {
+                followersurl = $(getfollowersbutton).attr("next")
+            } else {
+                followersurl = `https://abrajam.com/following/${user}` //relace with from actors file
+            }
+
+            $.ajax({
+                type: "GET",
+                url: followersurl,
+
+                success: function (d) {
+                    d.next = "http://google.com"
+                    if (d.first) {
+                        $.ajax({
+                            type: "GET",
+                            url: d.first,
+                            success: (d) => $('#followINGsarea').text(JSON.stringify(d, null, 4)),
+                            contentType: "application/json; charset=utf-8",
+
+                        });
+                    }
+
+                    else if (d.next) {
+                        $(getfollowersbutton).attr("next", d.next)
+                    }
+                },
+                contentType: "application/json; charset=utf-8",
+
+            });
+
+})        
     });
 </script>
 

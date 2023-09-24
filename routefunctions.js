@@ -1,6 +1,7 @@
 const { db, PrintAllStored, saveObject } = require('./database');
 const path = require('path');
 const { post } = require('./utils.js')
+const fs = require('fs');
 
 getwebfinger = async (req, res) => {
 
@@ -15,8 +16,8 @@ getwebfinger = async (req, res) => {
             res.status(200).json(JSON.parse(data));
         });
 
-    } catch {
-        res.status(500).send(`Sad at: ${Date.now()}`)
+    } catch (err) {
+        res.status(500).send(`${err} Sad at: ${Date.now()}`)
     }
 
 }
