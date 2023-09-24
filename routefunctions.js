@@ -8,7 +8,8 @@ getwebfinger = async (req, res) => {
     try {
 
         fs.readFile('./.well-known/webfinger', 'utf8', (err, data) => {
-
+            acct = req.query.acct
+            console.log(acct)
             if (err) {
                 console.error(err);
                 return;

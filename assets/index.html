@@ -97,7 +97,7 @@
 
     $(document).ready(function () {
 
-        basedomain = window.location.origin
+        //basedomain = window.location.origin
         webfinger = undefined
         actorfile = undefined
 
@@ -110,8 +110,8 @@
 
             $.ajax({
                 type: "GET",
-                url: `${basedomain}/.well-known/webfinger/${user}`,
-
+                url: `//${user.split('@')[1]}/.well-known/webfinger?resource=acct:${user}`,
+                headers: {"Accept": 'application/ld+json'},
                 success: (d) => {
                     webfinger = d
                     $('#webfingerarea').text(JSON.stringify(d, null, 4))
@@ -119,7 +119,7 @@
                     actorpath = userinfo['href']
                     getActor(actorpath)
                 },
-                contentType: "application/json; charset=utf-8"
+                
             });
         })
 
@@ -129,14 +129,14 @@
             $.ajax({
                 type: "GET",
                 url: actorpath,
-                // data: $('textarea').text(),
+                headers: {"Accept": 'application/ld+json'},
                 success: (d) => {
                     actorfile = d
                     $('details').show()
                     $("#actorfilearea").text(JSON.stringify(d, null, 4))
                     
-                },
-                contentType: "application/json; charset=utf-8",
+                }
+                
 
             });
         }
