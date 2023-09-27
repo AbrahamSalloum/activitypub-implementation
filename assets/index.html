@@ -2,6 +2,10 @@
 
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+
+
 </head>
 
 <body>
@@ -11,15 +15,15 @@
         <table>
             <tr>
                 <td>
-                    <input id="webfingeruser" type="text" /><button id="fingerbtn">finger</button>
+                    <input id="webfingeruser" type="text" placeholder="acct:Gargron@mastodon.social"/><button id="fingerbtn">finger</button>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <textarea id="webfingerarea" style="width:500;height:500"></textarea>
+                    <pre><code id="webfingerarea"></code></pre>
                 </td>
                 <td>
-                    <textarea id="actorfilearea" style="width:500;height:500"></textarea>
+                    <pre><code  id="actorfilearea"></code></pre>
                 </td>
             </tr>
             <tr>
@@ -44,7 +48,7 @@
             </tr>
             <tr>
                 <td>
-                    <textarea style="width:1000px;height:1000px"></textarea>
+                    <pre><code id="postbox"></code></pre>
                 </td>
             </tr>
             <tr>
@@ -61,7 +65,7 @@
                 <td><button id="getinbox">Get Inbox</button></td>
             </tr>
             <tr>
-                <td><textarea id="inboxarea"></textarea></td>
+                <td><pre><code  id="inboxarea"></code></pre></td>
             </tr>
         </table>
     </details>
@@ -74,8 +78,8 @@
                 <td><button id="prevfollowers">prev</button> <button id="nextfollowers">next</button></td>
             </tr>
             <tr>
-                <td><textarea id="followersarea"></textarea></td>
-                <td><textarea id="followerslist"></textarea></td>
+                <td><pre><code id="followersarea"></code></pre></td>
+                <td><pre><code  id="followerslist"></code></pre></td>
             </tr>
 
         </table>
@@ -84,11 +88,14 @@
         <summary>Get FollowING</summary>
         <table>
             <tr>
-                <td><button id="getfollowING">Get FollowING</button></td>
-                <td>user: <input type="text" id="follows" placeholder="abraham"></td>
+                <td><button id="getfollowING">Get FollowING</button>user: <input type="text" id="follows" placeholder="abraham"></td>
+                <td><button id="prevfollows">prev</button> <button id="nextfollows">next</button></td>
             </tr>
             <tr>
-                <td><textarea id="followINGsarea"></textarea></td>
+               
+                <td><pre><code id="followsarea"></code></pre></td>
+                <td><pre><code id="followslist"></code></pre></td>
+                
             </tr>
         </table>
     </details>
@@ -99,6 +106,16 @@
 <script>
 
     $(document).ready(function () {
+
+        $('code').addClass('language-json').css({
+            'width': "500px",
+            'height': "500px",
+        })
+
+        $("input").css({
+            'width': '350px'
+        })
+        
 
         //basedomain = window.location.origin
         webfinger = undefined
@@ -118,6 +135,7 @@
                 success: (d) => {
                     webfinger = d
                     $('#webfingerarea').text(JSON.stringify(d, null, 4))
+                    hljs.highlightAll();
                     userinfo = webfinger['links'].find(item => item.type == "application/activity+json")
                     actorpath = userinfo['href']
                     getActor(actorpath)
@@ -135,9 +153,11 @@
                 headers: {"Accept": 'application/ld+json'},
                 success: (d) => {
                     actorfile = d
+                    $("#following_user").attr('placeholder', d.following)
+                    $("#follows").attr("placeholder", d.followers)
                     $('details').show()
                     $("#actorfilearea").text(JSON.stringify(d, null, 4))
-                    
+                    hljs.highlightAll();
                 }
                 
 
@@ -152,6 +172,7 @@
                 success: (d) => {
                     
                     $('#inboxarea').text(JSON.stringify(d, null, 4))
+                    hljs.highlightAll();
                 },
                 contentType: "application/json; charset=utf-8",
 
@@ -186,7 +207,7 @@
 
             if (this.value == "reply") {
                 console.log(jsontemplate)
-                $('textarea').text(JSON.stringify(jsontemplate["reply"], undefined, 4))
+                $('#postbox').text(JSON.stringify(jsontemplate["reply"], undefined, 4))
             }
 
 
@@ -203,7 +224,10 @@
                 type: "POST",
                 url: "/post",
                 data: $('#actionselector').text(),
-                success: (d) => $('#msg').html(d),
+                success: (d) => {
+                    $('#msg').html(d)
+                    hljs.highlightAll();
+                },
                 headers: {"Accept": '*'},
                 contentType: "application/json; charset=utf-8",
             });
@@ -224,6 +248,7 @@
                 success: function (d) {
                     console.log(d)
                     $('#followersarea').text(JSON.stringify(d, null, 4))
+                    hljs.highlightAll();
                     console.log(d.first)
                     $.ajax({
                         type: "GET",
@@ -231,6 +256,7 @@
                         success: function (d) {
                             $('#nextfollowers').attr("next", d.next)
                             $('#followerslist').text(JSON.stringify(d, null, 4))
+                            hljs.highlightAll();
                         }
                     })
                 },
@@ -251,6 +277,7 @@
                             $('#nextfollowers').attr("next", d.next)
                             $('#prevfollowers').attr("prev", d.prev)
                             $('#followerslist').text(JSON.stringify(d, null, 4))
+                            hljs.highlightAll();
                         }
                     })
 
@@ -266,51 +293,76 @@
                             $('#nextfollowers').attr("next", d.next )
                             $('#prevfollowers').attr("prev", d.prev)
                             $('#followerslist').text(JSON.stringify(d, null, 4))
+                            hljs.highlightAll();
                         }
                     })
 
         })
 
 
-        $('#getfollowING').on('click', function () {
-
-            user = $('#follows').val() || 'abraham'
-            getfollowersbutton = this
-            console.log(getfollowersbutton)
-            if ($(getfollowersbutton).attr("next")) {
-                followersurl = $(getfollowersbutton).attr("next")
-            } else {
-                followersurl = actorfile.following 
-            }
-
+        $('#nextfollows').on('click', function(){
+                        next = $(this).attr('next')
+                        
             $.ajax({
-                type: "GET",
-                url: followersurl,
-
-                success: function (d) {
-                    d.next = "http://google.com"
-                    if (d.first) {
-                        $.ajax({
-                            type: "GET",
-                            url: d.first,
-                            success: (d) => {
-                              
-                                $('#followINGsarea').text(JSON.stringify(d, null, 4))
-                            },
-                            contentType: "application/json; charset=utf-8",
-
-                        });
-                    }
-
-                    else if (d.next) {
-                        $(getfollowersbutton).attr("next", d.next)
-                    }
-                },
-                contentType: "application/json; charset=utf-8",
-
-            });
+                        type: "GET",
+                        url: `/followinglist/${encodeURIComponent(btoa(next))}`,
+                        success: function (d) {
+                            $('#nextfollows').attr("next", d.next )
+                            $('#prevfollows').attr("prev", d.prev)
+                            $('#followslist').text(JSON.stringify(d, null, 4))
+                            hljs.highlightAll();
+                        }
+                    })
 
         })
+
+        $('#prevfollows').on('click', function(){
+                        prev = $(this).attr('prev')
+                        
+            $.ajax({
+                        type: "GET",
+                        url: `/followinglist/${encodeURIComponent(btoa(prev))}`,
+                        success: function (d) {
+                            $('#nextfollows').attr("next", d.next )
+                            $('#prevfollows').attr("prev", d.prev)
+                            $('#followslist').text(JSON.stringify(d, null, 4))
+                            hljs.highlightAll();
+                        }
+                    })
+
+        })       
+
+
+        $('#getfollowING').on('click', function () {
+
+
+getfollowersbutton = this
+console.log(getfollowersbutton)
+followingsurl = actorfile.following
+
+$.ajax({
+    type: "GET",
+    url: `/following/${btoa(followingsurl)}`,
+    
+    success: function (d) {
+        console.log(d)
+        $('#followsarea').text(JSON.stringify(d, null, 4))
+        hljs.highlightAll();
+        // console.log(d.first, encodeURIComponent(btoa(d.first)))
+
+        $.ajax({
+            type: "GET",
+            url: `/followinglist/${encodeURIComponent(btoa(d.first))}`,
+            success: function (d) {
+                $('#nextfollows').attr("next", d.next)
+                $('#followslist').text(JSON.stringify(d, null, 4))
+                hljs.highlightAll();
+            }
+        })
+    }
+});
+
+})
     });
 </script>
 

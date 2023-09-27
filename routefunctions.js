@@ -9,7 +9,7 @@ getwebfinger = async (req, res) => {
 
         fs.readFile('./.well-known/webfinger', 'utf8', (err, data) => {
             acct = req.query.acct
-            console.log(acct)
+           
             if (err) {
                 console.error(err);
                 return;
@@ -65,18 +65,26 @@ getinspect = async (req, res) => {
 }
 
 
-getfollowerspage = async(req, res) => {
-    return 1
+getfollowspage = async(req, res) => {
+    followslist = atob(req.params.page)
+    try {
+     let x = await getdatafromurl(followslist)
+    
+     res.status(200).json(x.data)
+    } catch(err) {
+     console.log(err)
+    }
+    
+    return 
 }
 
 
 getfollowingpage = async (req, res) => {
     
     followerlist = atob(req.params.page)
-    console.log(followerlist)
     try {
      let x = await getdatafromurl(followerlist)
-     console.log(x)
+     
      res.status(200).json(x.data)
     } catch(err) {
      console.log(err)
@@ -105,10 +113,9 @@ getfollowingpage = async (req, res) => {
 getfollowers = async (req, res) => {
 
    followerlist = atob(req.params.userid)
-   console.log(followerlist)
    try {
     let x = await getdatafromurl(followerlist)
-    console.log(x)
+
     res.status(200).json(x.data)
    } catch(err) {
     console.log(err)
@@ -127,6 +134,16 @@ getfollowers = async (req, res) => {
 }
 
 getfollowing = async (req, res) => {
+
+    followslist = atob(req.params.userid)
+    try {
+     let x = await getdatafromurl(followslist)
+     res.status(200).json(x.data)
+    } catch(err) {
+     console.log(err)
+    }
+
+    return
 
     following = {
         "@context": "https://www.w3.org/ns/activitystreams",
@@ -174,7 +191,7 @@ module.exports = {
     getasset,
     getinspect,
     getfollowingpage,
-    getfollowerspage,
+    getfollowspage,
     getfollowers,
     getfollowing,
     postmessage,
