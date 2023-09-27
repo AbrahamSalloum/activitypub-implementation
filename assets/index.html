@@ -3,19 +3,17 @@
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 </head>
 
 <body>
-
     <details id="show" open>
         <summary>webfinger</summary>
         <table>
             <tr>
                 <td>
-                    <input id="webfingeruser" type="text" placeholder="acct:Gargron@mastodon.social"/><button id="fingerbtn">finger</button>
+                    <input id="webfingeruser" type="text" placeholder="acct:Gargron@mastodon.social" /><button
+                        id="fingerbtn">finger</button>
                 </td>
             </tr>
             <tr>
@@ -59,13 +57,20 @@
         </table>
     </details>
     <details>
-        <summary>Get Inbox</summary>
+        <summary>Get Outbox</summary>
         <table>
             <tr>
-                <td><button id="getinbox">Get Inbox</button></td>
+                <td><button id="getoutbox">Get Outbox</button>
+                    user: <input type="text" id="outbox_user" placeholder="outbox"></td>
+                <td><button id="prevoutbox">prev</button> <button id="nextoutbox">next</button></td>
             </tr>
             <tr>
-                <td><pre><code  id="inboxarea"></code></pre></td>
+                <td>
+                    <pre><code  id="outboxarea"></code></pre>
+                </td>
+                <td>
+                    <pre><code  id="outboxarealist"></code></pre>
+                </td>
             </tr>
         </table>
     </details>
@@ -74,12 +79,16 @@
         <table>
             <tr>
                 <td><button id="getfollowers">Get Followers</button>
-                user: <input type="text" id="following_user" placeholder="abraham"></td>
+                    user: <input type="text" id="following_user" placeholder="abraham"></td>
                 <td><button id="prevfollowers">prev</button> <button id="nextfollowers">next</button></td>
             </tr>
             <tr>
-                <td><pre><code id="followersarea"></code></pre></td>
-                <td><pre><code  id="followerslist"></code></pre></td>
+                <td>
+                    <pre><code id="followersarea"></code></pre>
+                </td>
+                <td>
+                    <pre><code  id="followerslist"></code></pre>
+                </td>
             </tr>
 
         </table>
@@ -88,14 +97,19 @@
         <summary>Get FollowING</summary>
         <table>
             <tr>
-                <td><button id="getfollowING">Get FollowING</button>user: <input type="text" id="follows" placeholder="abraham"></td>
+                <td><button id="getfollowING">Get FollowING</button>user: <input type="text" id="follows"
+                        placeholder="abraham"></td>
                 <td><button id="prevfollows">prev</button> <button id="nextfollows">next</button></td>
             </tr>
             <tr>
-               
-                <td><pre><code id="followsarea"></code></pre></td>
-                <td><pre><code id="followslist"></code></pre></td>
-                
+
+                <td>
+                    <pre><code id="followsarea"></code></pre>
+                </td>
+                <td>
+                    <pre><code id="followslist"></code></pre>
+                </td>
+
             </tr>
         </table>
     </details>
@@ -115,9 +129,7 @@
         $("input").css({
             'width': '350px'
         })
-        
 
-        //basedomain = window.location.origin
         webfinger = undefined
         actorfile = undefined
 
@@ -131,7 +143,7 @@
             $.ajax({
                 type: "GET",
                 url: `//${user.split('@')[1]}/.well-known/webfinger?resource=acct:${user}`,
-                headers: {"Accept": 'application/ld+json'},
+                headers: { "Accept": 'application/ld+json' },
                 success: (d) => {
                     webfinger = d
                     $('#webfingerarea').text(JSON.stringify(d, null, 4))
@@ -139,8 +151,7 @@
                     userinfo = webfinger['links'].find(item => item.type == "application/activity+json")
                     actorpath = userinfo['href']
                     getActor(actorpath)
-                },
-                
+                }
             });
         })
 
@@ -150,29 +161,69 @@
             $.ajax({
                 type: "GET",
                 url: actorpath,
-                headers: {"Accept": 'application/ld+json'},
+                headers: { "Accept": 'application/ld+json' },
                 success: (d) => {
                     actorfile = d
                     $("#following_user").attr('placeholder', d.following)
                     $("#follows").attr("placeholder", d.followers)
+                    $('#outbox_user').attr('placeholder', d.outbox)
                     $('details').show()
                     $("#actorfilearea").text(JSON.stringify(d, null, 4))
                     hljs.highlightAll();
                 }
-                
-
             });
         }
 
-        $('#getinbox').on('click', function () {
+        $('#nextoutbox').on('click', function () {
+            
+            next = $(this).attr('next')
+
             $.ajax({
                 type: "GET",
-                url: "/inspect",
-                // data: $('textarea').text(),
-                success: (d) => {
-                    
-                    $('#inboxarea').text(JSON.stringify(d, null, 4))
+                url: `/outboxitems/${encodeURIComponent(btoa(next))}`,
+                success: function (d) {
+                    $('#nextoutbox').attr("next", d.next)
+                    $('#prevoutbox').attr("prev", d.prev)
+                    $('#outboxarealist').text(JSON.stringify(d, null, 4))
                     hljs.highlightAll();
+                }
+            })
+        })
+
+        $('#prevoutbox').on('click', function () {
+
+            prev = $(this).attr('prev')
+
+            $.ajax({
+                type: "GET",
+                url: `/outboxitems/${encodeURIComponent(btoa(prev))}`,
+                success: function (d) {
+                    $('#nextoutbox').attr("next", d.next)
+                    $('#prevoutbox').attr("prev", d.prev)
+                    $('#outboxarealist').text(JSON.stringify(d, null, 4))
+                    hljs.highlightAll();
+                }
+            })
+        })
+
+
+        $('#getoutbox').on('click', function () {
+
+            $.ajax({
+                type: "GET",
+                url: `/getoutbox/${btoa(actorfile.outbox)}`,
+                success: (d) => {
+                    $('#outboxarea').text(JSON.stringify(d, null, 4))
+                    hljs.highlightAll();
+                    $.ajax({
+                        type: "GET",
+                        url: `/outboxitems/${encodeURIComponent(btoa(d.first))}`,
+                        success: function (d) {
+                            $('#nextoutbox').attr("next", d.next)
+                            $('#outboxarealist').text(JSON.stringify(d, null, 4))
+                            hljs.highlightAll();
+                        }
+                    })
                 },
                 contentType: "application/json; charset=utf-8",
 
@@ -180,6 +231,7 @@
         })
 
         $('select').on('change', function () {
+          
             id = (new Date()).getTime()
             var jsontemplate = {
 
@@ -202,23 +254,15 @@
                 }
 
             }
-
-
-
             if (this.value == "reply") {
                 console.log(jsontemplate)
                 $('#postbox').text(JSON.stringify(jsontemplate["reply"], undefined, 4))
             }
-
-
-
-
         })
 
         $('#sendbutton').on('click', function () {
             operation = $('#actionselector').value
             data = $('#actionselector').text()
-            console.log(data)
 
             $.ajax({
                 type: "POST",
@@ -228,10 +272,9 @@
                     $('#msg').html(d)
                     hljs.highlightAll();
                 },
-                headers: {"Accept": '*'},
+                headers: { "Accept": '*' },
                 contentType: "application/json; charset=utf-8",
             });
-
         })
 
         $('#getfollowers').on('click', function () {
@@ -244,12 +287,9 @@
             $.ajax({
                 type: "GET",
                 url: `/followers/${btoa(followersurl)}`,
-                
                 success: function (d) {
-                    console.log(d)
                     $('#followersarea').text(JSON.stringify(d, null, 4))
                     hljs.highlightAll();
-                    console.log(d.first)
                     $.ajax({
                         type: "GET",
                         url: `/followerslist/${encodeURIComponent(btoa(d.first))}`,
@@ -259,117 +299,106 @@
                             hljs.highlightAll();
                         }
                     })
-                },
-
-
+                }
             });
 
         })
 
 
-        $('#nextfollowers').on('click', function(){
-                        next = $(this).attr('next')
-                        
+        $('#nextfollowers').on('click', function () {
+
+            next = $(this).attr('next')
             $.ajax({
-                        type: "GET",
-                        url: `/followerslist/${encodeURIComponent(btoa(next))}`,
-                        success: function (d) {
-                            $('#nextfollowers').attr("next", d.next)
-                            $('#prevfollowers').attr("prev", d.prev)
-                            $('#followerslist').text(JSON.stringify(d, null, 4))
-                            hljs.highlightAll();
-                        }
-                    })
+                type: "GET",
+                url: `/followerslist/${encodeURIComponent(btoa(next))}`,
+                success: function (d) {
+                    $('#nextfollowers').attr("next", d.next)
+                    $('#prevfollowers').attr("prev", d.prev)
+                    $('#followerslist').text(JSON.stringify(d, null, 4))
+                    hljs.highlightAll();
+                }
+            })
 
         })
 
-        $('#prevfollowers').on('click', function(){
-                        prev = $(this).attr('prev')
-                        
+        $('#prevfollowers').on('click', function () {
+
+            prev = $(this).attr('prev')
             $.ajax({
-                        type: "GET",
-                        url: `/followerslist/${encodeURIComponent(btoa(prev))}`,
-                        success: function (d) {
-                            $('#nextfollowers').attr("next", d.next )
-                            $('#prevfollowers').attr("prev", d.prev)
-                            $('#followerslist').text(JSON.stringify(d, null, 4))
-                            hljs.highlightAll();
-                        }
-                    })
+                type: "GET",
+                url: `/followerslist/${encodeURIComponent(btoa(prev))}`,
+                success: function (d) {
+                    $('#nextfollowers').attr("next", d.next)
+                    $('#prevfollowers').attr("prev", d.prev)
+                    $('#followerslist').text(JSON.stringify(d, null, 4))
+                    hljs.highlightAll();
+                }
+            })
 
         })
 
 
-        $('#nextfollows').on('click', function(){
-                        next = $(this).attr('next')
-                        
-            $.ajax({
-                        type: "GET",
-                        url: `/followinglist/${encodeURIComponent(btoa(next))}`,
-                        success: function (d) {
-                            $('#nextfollows').attr("next", d.next )
-                            $('#prevfollows').attr("prev", d.prev)
-                            $('#followslist').text(JSON.stringify(d, null, 4))
-                            hljs.highlightAll();
-                        }
-                    })
+        $('#nextfollows').on('click', function () {
 
+            next = $(this).attr('next')
+            $.ajax({
+                type: "GET",
+                url: `/followinglist/${encodeURIComponent(btoa(next))}`,
+                success: function (d) {
+                    $('#nextfollows').attr("next", d.next)
+                    $('#prevfollows').attr("prev", d.prev)
+                    $('#followslist').text(JSON.stringify(d, null, 4))
+                    hljs.highlightAll();
+                }
+            })
         })
 
-        $('#prevfollows').on('click', function(){
-                        prev = $(this).attr('prev')
-                        
-            $.ajax({
-                        type: "GET",
-                        url: `/followinglist/${encodeURIComponent(btoa(prev))}`,
-                        success: function (d) {
-                            $('#nextfollows').attr("next", d.next )
-                            $('#prevfollows').attr("prev", d.prev)
-                            $('#followslist').text(JSON.stringify(d, null, 4))
-                            hljs.highlightAll();
-                        }
-                    })
+        $('#prevfollows').on('click', function () {
 
-        })       
+            prev = $(this).attr('prev')
+            $.ajax({
+                type: "GET",
+                url: `/followinglist/${encodeURIComponent(btoa(prev))}`,
+                success: function (d) {
+                    $('#nextfollows').attr("next", d.next)
+                    $('#prevfollows').attr("prev", d.prev)
+                    $('#followslist').text(JSON.stringify(d, null, 4))
+                    hljs.highlightAll();
+                }
+            })
+        })
 
 
         $('#getfollowING').on('click', function () {
 
-
-getfollowersbutton = this
-console.log(getfollowersbutton)
-followingsurl = actorfile.following
-
-$.ajax({
-    type: "GET",
-    url: `/following/${btoa(followingsurl)}`,
-    
-    success: function (d) {
-        console.log(d)
-        $('#followsarea').text(JSON.stringify(d, null, 4))
-        hljs.highlightAll();
-        // console.log(d.first, encodeURIComponent(btoa(d.first)))
-
-        $.ajax({
-            type: "GET",
-            url: `/followinglist/${encodeURIComponent(btoa(d.first))}`,
-            success: function (d) {
-                $('#nextfollows').attr("next", d.next)
-                $('#followslist').text(JSON.stringify(d, null, 4))
-                hljs.highlightAll();
-            }
+            getfollowersbutton = this
+            console.log(getfollowersbutton)
+            followingsurl = actorfile.following
+            $.ajax({
+                type: "GET",
+                url: `/following/${btoa(followingsurl)}`,
+                success: function (d) {
+                    $('#followsarea').text(JSON.stringify(d, null, 4))
+                    hljs.highlightAll();
+                    $.ajax({
+                        type: "GET",
+                        url: `/followinglist/${encodeURIComponent(btoa(d.first))}`,
+                        success: function (d) {
+                            $('#nextfollows').attr("next", d.next)
+                            $('#followslist').text(JSON.stringify(d, null, 4))
+                            hljs.highlightAll();
+                        }
+                    })
+                }
+            });
         })
-    }
-});
-
-})
     });
 </script>
 
 <style>
     textarea {
-        width: 500px; 
-        height: 500px; 
+        width: 500px;
+        height: 500px;
     }
 </style>
 
